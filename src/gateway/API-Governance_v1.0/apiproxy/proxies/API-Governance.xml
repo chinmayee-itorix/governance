@@ -1,0 +1,957 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<ProxyEndpoint name="API-GovernanceProxyEndpoint">
+   <Description>API Governance</Description>
+   <FaultRules>
+      <FaultRule name="SecurityFaultHandling">
+         <Step>
+            <Name>SF-SecurityFaultCallout</Name>
+         </Step>
+         <Condition>((oauthV2.VerifyAccessToken.failed equals true) or ((oauthV2.VerifyAPIKey.failed equals true) or (BasicAuthentication.DecodeBasicAuthentication.failed equals true) or (acl.AccessControl.failed equals true) or (oauthV2.failed equals true) or (authFlag equals false) or (isValidToken equals false)))</Condition>
+      </FaultRule>
+      <FaultRule name="TrafficManagementFaultHandling">
+         <Step>
+            <Name>SF-TrafficManagementFault</Name>
+         </Step>
+         <Condition>((ratelimit.SpikeArrest.failed equals true) or ((ratelimit.QuotaAtProductLevel.failed equals true)))</Condition>
+      </FaultRule>
+      <FaultRule name="ThreatFaultHandling">
+         <Step>
+            <Name>SF-ThreatFault</Name>
+         </Step>
+         <Condition>((jsonattack.cf-JSONThreatProtection.DoSAEvaluation.failed equals true) or (threatProtectionEvaluationStatus == "failed"))</Condition>
+      </FaultRule>
+   </FaultRules>
+   <DefaultFaultRule name="All">
+      <AlwaysEnforce>true</AlwaysEnforce>
+      <Step>
+         <Name>SF-DefaultFaultCallout</Name>
+      </Step>
+      <AlwaysEnforce>true</AlwaysEnforce>
+   </DefaultFaultRule>
+   <PreFlow name="PreFlow">
+      <Request>
+         <Step>
+            <Name>cf-set-log-variables</Name>
+         </Step>
+         <Step>
+            <Condition>(log.proxyVerb != "OPTIONS")</Condition>
+            <Name>cf-Generate-Message-Correlation-ID</Name>
+         </Step>
+         <Step>
+            <Name>SF-Proxy-Current-Flow-Name</Name>
+         </Step>
+         <Step>
+            <Name>SF-Log-Preflow-Request</Name>
+         </Step>
+         <Step>
+            <Condition>(request.header.Authorization equals null) and (log.proxyVerb != "OPTIONS")</Condition>
+            <Name>cf-data-validation-Authorization</Name>
+         </Step>
+         <Step>
+            <Condition>(log.proxyVerb != "OPTIONS")</Condition>
+            <Name>SF-SpikeArrestCallout-Environment</Name>
+         </Step>
+         <Step>
+            <Condition>(log.proxyVerb != "OPTIONS") and (log.proxyVerb != "GET") and (request.header.Content-Length != 0)</Condition>
+            <Name>SF-JSONThreatValidation</Name>
+         </Step>
+         <Step>
+            <Condition>(log.proxyVerb != "OPTIONS")</Condition>
+            <Name>SF-ThreatProtection</Name>
+         </Step>
+         <Step>
+            <Condition>(log.proxyVerb != "OPTIONS")</Condition>
+            <Name>SF-Validate-Access-Token</Name>
+         </Step>
+         <Step>
+            <Condition>(log.proxyVerb != "OPTIONS")</Condition>
+            <Name>SF-QuotaAtProductLevel</Name>
+         </Step>
+      </Request>
+      <Response>
+      </Response>
+   </PreFlow>
+   <Flows>
+      <Flow name="WrongAccept">
+         <Description/>
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Name>cf-Fault-Unsupported-AcceptType</Name>
+            </Step>
+         </Request>
+         <Response/>
+         <Condition>(log.proxyVerb != "OPTIONS") and (log.proxyVerb != "GET") and (!(log.Accept JavaRegex "(text\/xml)(;.*)|(.*;)(text\/xml)(;.*)|text\/xml|(.*;)(text\/xml)|(application\/xml)(;.*)|(.*;)(application\/xml)(;.*)|application\/xml|(.*;)(application\/xml)|(application\/json)(;.*)|(.*;)(application\/json)(;.*)|application\/json|(.*;)(application\/json)"))</Condition>
+      </Flow>
+      <Flow name="WrongContentType">
+         <Description/>
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Name>cf-Fault-Unsupported-ContentType</Name>
+            </Step>
+         </Request>
+         <Response/>
+         <Condition>(log.proxyVerb != "OPTIONS") and (log.proxyVerb != "GET") and ((!(request.content = "")) and (!(request.content is null)) and !(log.Content-Type JavaRegex "(text\/xml)(;.*)|(.*;)(text\/xml)(;.*)|text\/xml|(.*;)(text\/xml)|(application\/xml)(;.*)|(.*;)(application\/xml)(;.*)|application\/xml|(.*;)(application\/xml)|(application\/json)(;.*)|(.*;)(application\/json)(;.*)|application\/json|(.*;)(application\/json)"))</Condition>
+      </Flow>
+      <Flow name="formatSwaggerFile">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-formatSwaggerFile</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/format&quot;) and (request.verb= &quot;POST&quot;)</Condition>
+      </Flow>
+      <Flow name="lintDataDictionary">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-lintDataDictionary</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/lint/data-dictionary&quot;) and (request.verb= &quot;POST&quot;)</Condition>
+      </Flow>
+      <Flow name="triggerPortfolio">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-triggerPortfolio</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/triggerPortfolio&quot;) and (request.verb= &quot;POST&quot;)</Condition>
+      </Flow>
+      <Flow name="getAllRuleSets">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getAllRuleSets</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/rule-set&quot;) and (request.verb= &quot;GET&quot;)</Condition>
+      </Flow>
+      <Flow name="createRuleSet">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-createRuleSet</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/rule-set&quot;) and (request.verb= &quot;POST&quot;)</Condition>
+      </Flow>
+      <Flow name="getLintingReportHistory">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getLintingReportHistory</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/lint/history&quot;) and (request.verb= &quot;GET&quot;)</Condition>
+      </Flow>
+      <Flow name="getDashboardReport">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getDashboardReport</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/lint/report/dashboard&quot;) and (request.verb= &quot;GET&quot;)</Condition>
+      </Flow>
+      <Flow name="getPaths">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getPaths</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/rule-set/paths&quot;) and (request.verb= &quot;GET&quot;)</Condition>
+      </Flow>
+      <Flow name="addPaths">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-addPaths</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/rule-set/paths&quot;) and (request.verb= &quot;PUT&quot;)</Condition>
+      </Flow>
+      <Flow name="getAllRulsetsFromMasterDB">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getAllRulsetsFromMasterDB</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/template-rule-set&quot;) and (request.verb= &quot;GET&quot;)</Condition>
+      </Flow>
+      <Flow name="createTemplateRuleSet">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-createTemplateRuleSet</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/template-rule-set&quot;) and (request.verb= &quot;PUT&quot;)</Condition>
+      </Flow>
+      <Flow name="importRuleset">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-importRuleset</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/rule-set/import&quot;) and (request.verb= &quot;POST&quot;)</Condition>
+      </Flow>
+      <Flow name="getAssociateSwaggers">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getAssociateSwaggers</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/associate-rulesets-swagger&quot;) and (request.verb= &quot;GET&quot;)</Condition>
+      </Flow>
+      <Flow name="associateRuleSetSwagger">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-associateRuleSetSwagger</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/associate-rulesets-swagger&quot;) and (request.verb= &quot;PUT&quot;)</Condition>
+      </Flow>
+      <Flow name="getAssociateDataDictionaries">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getAssociateDataDictionaries</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/associate-rulesets-schema&quot;) and (request.verb= &quot;GET&quot;)</Condition>
+      </Flow>
+      <Flow name="associateRuleSetDataDictionary">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-associateRuleSetDataDictionary</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/associate-rulesets-schema&quot;) and (request.verb= &quot;PUT&quot;)</Condition>
+      </Flow>
+      <Flow name="getRulesetsSwagger">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getRulesetsSwagger</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/rulesets-swagger&quot;) and (request.verb= &quot;GET&quot;)</Condition>
+      </Flow>
+      <Flow name="deleteRulesetFromSwagger">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-deleteRulesetFromSwagger</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/deleteruleset-swagger&quot;) and (request.verb= &quot;DELETE&quot;)</Condition>
+      </Flow>
+      <Flow name="deleteRulesetFromSchema">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-deleteRulesetFromSchema</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/deleteruleset-schema&quot;) and (request.verb= &quot;DELETE&quot;)</Condition>
+      </Flow>
+      <Flow name="getRulesetsSchema">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getRulesetsSchema</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/rulesets-schema&quot;) and (request.verb= &quot;GET&quot;)</Condition>
+      </Flow>
+      <Flow name="getPublishedSwaggers">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getPublishedSwaggers</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/publishedswaggers&quot;) and (request.verb= &quot;GET&quot;)</Condition>
+      </Flow>
+      <Flow name="getActiveSchemas">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getActiveSchemas</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/activeschemas&quot;) and (request.verb= &quot;GET&quot;)</Condition>
+      </Flow>
+      <Flow name="addRuleToRulsets">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-addRuleToRulsets</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/addRuleToRulsets&quot;) and (request.verb= &quot;PUT&quot;)</Condition>
+      </Flow>
+      <Flow name="getAllSwaggers">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getAllSwaggers</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/swaggers&quot;) and (request.verb= &quot;GET&quot;)</Condition>
+      </Flow>
+      <Flow name="getAllModels">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getAllModels</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/models&quot;) and (request.verb= &quot;GET&quot;)</Condition>
+      </Flow>
+      <Flow name="getSpectralRuleSets">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getSpectralRuleSets</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/convert/spectral-ruleset&quot;) and (request.verb= &quot;PUT&quot;)</Condition>
+      </Flow>
+      <Flow name="getLintingReport">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getLintingReport</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/lint/report/search&quot;) and (request.verb= &quot;GET&quot;)</Condition>
+      </Flow>
+      <Flow name="lintSwaggerByRuleSet">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-lintSwaggerByRuleSet</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/lint&quot;) and (request.verb= &quot;POST&quot;)</Condition>
+      </Flow>
+      <Flow name="triggerLintSwagger">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-triggerLintSwagger</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/triggerLintSwagger/{swaggerId}&quot;) and (request.verb= &quot;POST&quot;)</Condition>
+      </Flow>
+      <Flow name="triggerLintSchema">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-triggerLintSchema</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/triggerLintSchema/{schemaId}&quot;) and (request.verb= &quot;POST&quot;)</Condition>
+      </Flow>
+      <Flow name="getRuleSetByIdOrName">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getRuleSetByIdOrName</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/rule-set/{rulesetid}&quot;) and (request.verb= &quot;GET&quot;)</Condition>
+      </Flow>
+      <Flow name="updateRuleSet">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-updateRuleSet</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/rule-set/{rulesetid}&quot;) and (request.verb= &quot;PUT&quot;)</Condition>
+      </Flow>
+      <Flow name="deleteRuleSet">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-deleteRuleSet</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/rule-set/{rulesetid}&quot;) and (request.verb= &quot;DELETE&quot;)</Condition>
+      </Flow>
+      <Flow name="getLintingReportByIdgetLintingReportById">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getLintingReportByIdgetLintingReportById</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/lint/history/{reportId}&quot;) and (request.verb= &quot;GET&quot;)</Condition>
+      </Flow>
+      <Flow name="getCommitHistory">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getCommitHistory</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/lint/commit/{commitid}&quot;) and (request.verb= &quot;GET&quot;)</Condition>
+      </Flow>
+      <Flow name="getLintingReportByExecutionId">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getLintingReportByExecutionId</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/lint/{lintid}&quot;) and (request.verb= &quot;GET&quot;)</Condition>
+      </Flow>
+      <Flow name="getRulesetsForDD">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getRulesetsForDD</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/datadictionary/{dictionaryid}/rulesets&quot;) and (request.verb= &quot;GET&quot;)</Condition>
+      </Flow>
+      <Flow name="getLintingRuns">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.x-tenant equals null)</Condition>
+               <Name>cf-data-validation-header</Name>
+            </Step>
+            <Step>
+               <Condition>(request.header.Content-Length equals 0) and (request.verb!= "GET") and (request.verb!= "DELETE")</Condition>
+               <Name>cf-data-validation-payload</Name>
+            </Step>
+            <Step>
+               <Name>cf-Assign-Routing-Variables-getLintingRuns</Name>
+            </Step>
+         </Request>
+         <Response>
+         </Response>
+         <Condition>(proxy.pathsuffix MatchesPath &quot;/api-design/dashboard/{id}&quot;) and (request.verb= &quot;GET&quot;)</Condition>
+      </Flow>
+      <!-- CORS Preflight flow-->
+      <Flow name="CORS">
+         <Description/>
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Name>cf-getCORSDomainList</Name>
+            </Step>
+         </Request>
+         <Response>
+            <Step>
+               <Name>cf-CORSValidation</Name>
+            </Step>
+         </Response>
+         <Condition>(log.proxyVerb == "OPTIONS") and (log.origin != null)</Condition>
+      </Flow>
+      <Flow name="unknown-resource">
+         <Request>
+            <Step>
+               <Name>SF-Proxy-Current-Flow-Name</Name>
+            </Step>
+            <Step>
+               <Name>cf-Unknown-Resource</Name>
+            </Step>
+         </Request>
+         <Response/>
+      </Flow>
+   </Flows>
+   <PostFlow name="PostFlow">
+      <Request></Request>
+      <Response>
+         <Step>
+            <Name>SF-Log-Collector</Name>
+         </Step>
+         <Step>
+            <Name>SF-Compliance-Callout</Name>
+         </Step>
+      </Response>
+   </PostFlow>
+   <PostClientFlow>
+        <Request/>
+        <Response>
+        </Response>
+    </PostClientFlow>
+   <HTTPProxyConnection>
+      <BasePath>/v1/astrum</BasePath>
+      <VirtualHost>default</VirtualHost>
+      <VirtualHost>secure</VirtualHost>
+   </HTTPProxyConnection>
+   <RouteRule name="NoRoute">
+      <Condition>(request.verb == "OPTIONS")</Condition>
+   </RouteRule>
+   <RouteRule name="API-Governance">
+      <Condition>(target.route.service = &quot;API-Governance&quot;)</Condition>
+      <TargetEndpoint>API-Governance</TargetEndpoint>
+   </RouteRule>
+</ProxyEndpoint>

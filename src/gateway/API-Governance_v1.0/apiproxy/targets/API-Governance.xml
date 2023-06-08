@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<TargetEndpoint name="API-Governance">
+    <Description>API Governance</Description>
+	<FaultRules>
+	</FaultRules>
+	<DefaultFaultRule>
+            <Step>
+                <Name>SF-PostflowResponseTargetLogAggregator</Name>
+            </Step>
+    	<AlwaysEnforce>true</AlwaysEnforce>
+	</DefaultFaultRule>
+	<PreFlow name="PreFlow">
+        <Request>
+            <Step>
+                <Name>SF-PreflowRequestTargetLogAggregator</Name>
+            </Step>
+            <Step>
+                <Name>cf-Remove-Proxy-Auth-Header</Name>
+            </Step>
+        </Request>
+        <Response/>
+    </PreFlow>
+	<Flows>
+        <Flow name="formatSwaggerFile">
+        	<Condition>(targetOperation = &quot;formatSwaggerFile&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="lintDataDictionary">
+        	<Condition>(targetOperation = &quot;lintDataDictionary&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="triggerPortfolio">
+        	<Condition>(targetOperation = &quot;triggerPortfolio&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getAllRuleSets">
+        	<Condition>(targetOperation = &quot;getAllRuleSets&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="createRuleSet">
+        	<Condition>(targetOperation = &quot;createRuleSet&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getLintingReportHistory">
+        	<Condition>(targetOperation = &quot;getLintingReportHistory&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getDashboardReport">
+        	<Condition>(targetOperation = &quot;getDashboardReport&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getPaths">
+        	<Condition>(targetOperation = &quot;getPaths&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="addPaths">
+        	<Condition>(targetOperation = &quot;addPaths&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getAllRulsetsFromMasterDB">
+        	<Condition>(targetOperation = &quot;getAllRulsetsFromMasterDB&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="createTemplateRuleSet">
+        	<Condition>(targetOperation = &quot;createTemplateRuleSet&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="importRuleset">
+        	<Condition>(targetOperation = &quot;importRuleset&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getAssociateSwaggers">
+        	<Condition>(targetOperation = &quot;getAssociateSwaggers&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="associateRuleSetSwagger">
+        	<Condition>(targetOperation = &quot;associateRuleSetSwagger&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getAssociateDataDictionaries">
+        	<Condition>(targetOperation = &quot;getAssociateDataDictionaries&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="associateRuleSetDataDictionary">
+        	<Condition>(targetOperation = &quot;associateRuleSetDataDictionary&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getRulesetsSwagger">
+        	<Condition>(targetOperation = &quot;getRulesetsSwagger&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="deleteRulesetFromSwagger">
+        	<Condition>(targetOperation = &quot;deleteRulesetFromSwagger&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="deleteRulesetFromSchema">
+        	<Condition>(targetOperation = &quot;deleteRulesetFromSchema&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getRulesetsSchema">
+        	<Condition>(targetOperation = &quot;getRulesetsSchema&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getPublishedSwaggers">
+        	<Condition>(targetOperation = &quot;getPublishedSwaggers&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getActiveSchemas">
+        	<Condition>(targetOperation = &quot;getActiveSchemas&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="addRuleToRulsets">
+        	<Condition>(targetOperation = &quot;addRuleToRulsets&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getAllSwaggers">
+        	<Condition>(targetOperation = &quot;getAllSwaggers&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getAllModels">
+        	<Condition>(targetOperation = &quot;getAllModels&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getSpectralRuleSets">
+        	<Condition>(targetOperation = &quot;getSpectralRuleSets&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getLintingReport">
+        	<Condition>(targetOperation = &quot;getLintingReport&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="lintSwaggerByRuleSet">
+        	<Condition>(targetOperation = &quot;lintSwaggerByRuleSet&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="triggerLintSwagger">
+        	<Condition>(targetOperation = &quot;triggerLintSwagger&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="triggerLintSchema">
+        	<Condition>(targetOperation = &quot;triggerLintSchema&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getRuleSetByIdOrName">
+        	<Condition>(targetOperation = &quot;getRuleSetByIdOrName&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="updateRuleSet">
+        	<Condition>(targetOperation = &quot;updateRuleSet&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="deleteRuleSet">
+        	<Condition>(targetOperation = &quot;deleteRuleSet&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getLintingReportByIdgetLintingReportById">
+        	<Condition>(targetOperation = &quot;getLintingReportByIdgetLintingReportById&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getCommitHistory">
+        	<Condition>(targetOperation = &quot;getCommitHistory&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getLintingReportByExecutionId">
+        	<Condition>(targetOperation = &quot;getLintingReportByExecutionId&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getRulesetsForDD">
+        	<Condition>(targetOperation = &quot;getRulesetsForDD&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+        <Flow name="getLintingRuns">
+        	<Condition>(targetOperation = &quot;getLintingRuns&quot;)</Condition>
+			<Request>
+			</Request>   
+			<Response>
+			</Response>
+        </Flow>
+	</Flows>
+    <PostFlow name="PostFlow">
+        <Request>
+            <Step>
+                <Name>SF-PostflowRequestTargetLogAggregator</Name>
+            </Step>
+        </Request>
+        <Response>
+            <Step>
+                <Name>SF-PostflowResponseTargetLogAggregator</Name>
+            </Step>
+        </Response>
+    </PostFlow>
+    <HTTPTargetConnection>
+    	<LoadBalancer>
+            <Server name="API-Governance">
+                <IsEnabled>true</IsEnabled>
+            </Server>
+        </LoadBalancer>
+        <Path>/v1/astrum</Path>
+    </HTTPTargetConnection>
+</TargetEndpoint>
