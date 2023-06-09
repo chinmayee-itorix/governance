@@ -1,0 +1,70 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "title" : "Api Ratings",
+    "description" : "Swagger Documentation for Api Ratings",
+    "version" : "v1.0.0"
+  },
+  "paths" : {
+    "/swaggers/{swaggerId}/rating" : {
+      "parameters" : [ {
+        "name" : "swaggerId",
+        "in" : "path",
+        "required" : true,
+        "description" : "",
+        "type" : "string"
+      } ],
+      "x-description" : "Base Path",
+      "post" : {
+        "summary" : "Creating api",
+        "description" : "\nThe definition of a description is a statement that gives details about someone or something. An example of description is a story about the places visited on a family trip. noun.\n\nThe definition of a description is a statement that gives details about someone or something. An example of description is a story about the places visited on a family trip. noun.",
+        "parameters" : [ {
+          "x-key" : 1,
+          "name" : "parameter1",
+          "in" : "query",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "{     \"userName\":\"sravan\",     \"email\":\"sravan@gmail.com\",     \"comments\":\"again updated comment\",     \"rating\":2,     \"oasVersion\":2.0,     \"revision\":1 }",
+          "in" : "body",
+          "description" : "",
+          "required" : true,
+          "schema" : {
+            "type" : "object"
+          }
+        } ],
+        "operationId" : "/rating",
+        "responses" : {
+          "201" : {
+            "description" : ""
+          }
+        },
+        "x-targetBasepath" : "/rating",
+        "tags" : [ ]
+      }
+    }
+  },
+  "schemes" : [ "https" ],
+  "x-servers" : [ ],
+  "consumes" : [ ],
+  "produces" : [ ],
+  "tags" : [ ],
+  "basePath" : "/itorix",
+  "host" : "gcp-dev.apiwiz.io",
+  "definitions" : { },
+  "securityDefinitions" : { },
+  "parameters" : { },
+  "x-mock" : true,
+  "x-metadata" : {
+    "metadata" : {
+      "swaggerName" : "28dea6a77adf4d8e965ec7569715b407",
+      "revision" : 1,
+      "documentation" : [ ],
+      "category" : [ {
+        "name" : "Unsorted",
+        "paths" : [ "/swaggers/{swaggerId}/rating" ],
+        "definitions" : [ ]
+      } ]
+    }
+  }
+}
